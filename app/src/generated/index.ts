@@ -5,11 +5,13 @@
 
 // Models
 export * as CommonModels from './models/CommonModels';
+export * as Office365OutlookModel from './models/Office365OutlookModel';
 export * as Sh_locationsModel from './models/Sh_locationsModel';
 export * as Sh_roomsModel from './models/Sh_roomsModel';
 export * as Sh_sublocationsModel from './models/Sh_sublocationsModel';
 
 // Services
+export * from './services/Office365OutlookService';
 export * from './services/Sh_locationsService';
 export * from './services/Sh_roomsService';
 export * from './services/Sh_sublocationsService';

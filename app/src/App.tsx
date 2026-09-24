@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { Sh_roomsService } from './generated/services/Sh_roomsService'
 import type { Sh_rooms, Sh_roomsBase } from './generated/models/Sh_roomsModel'
+import { Office365OutlookService } from './generated/services/Office365OutlookService'
 
 type Room = Sh_rooms
 
@@ -61,7 +62,8 @@ function App() {
   const apply = async (id: string, changes: Partial<Omit<Sh_roomsBase, 'sh_roomid'>>, okMsg: string) => {
     setBusy(true)
     try {
-      await Sh_roomsService.update(id, changes)
+      const res = await Sh_roomsService.update(id, changes)
+      if (!res.success) throw res.error ?? new Error('Update failed')
       await load()
       flash('ok', okMsg)
     } catch (e) {
@@ -83,17 +85,42 @@ function App() {
     else flash('err', 'No meeting link on this room yet — reset the room to create one.')
   }
 
-  const invite = (r: Room) => {
+  const invite = async (r: Room) => {
     const email = emailDraft.trim()
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       flash('err', 'Enter a valid email address.')
       return
     }
-    void apply(
-      r.sh_roomid,
-      { sh_sharedwith: (r.sh_sharedwith ?? 0) + 1, sh_lastshare: nowIso(), sh_shareexternally: true },
-      `Invite sent to ${email} (share count now ${(r.sh_sharedwith ?? 0) + 1})`
-    ).then(() => setEmailDraft(''))
+    setBusy(true)
+    try {
+      const link = r.sh_meetinglink
+        ? `${r.sh_meetinglink}${r.sh_meetinglink.includes('?') ? '&' : '?'}webjoin=true`
+        : ''
+      const mail = await Office365OutlookService.SendEmailV2({
+        To: email,
+        Subject: 'You have been invited to virtually visit a patient',
+        Body:
+          `<p>Hello,</p>` +
+          `<p>You have been invited to virtually visit a patient in our hospital. ` +
+          `To visit, click the link below and follow the prompts in your browser.</p>` +
+          (link ? `<p><a href="${link}">Visit Patient</a></p>` : `<p>(A meeting link will be provided by the care team.)</p>`),
+        Importance: 'Normal'
+      })
+      if (!mail.success) throw mail.error ?? new Error('Email failed to send')
+      const upd = await Sh_roomsService.update(r.sh_roomid, {
+        sh_sharedwith: (r.sh_sharedwith ?? 0) + 1,
+        sh_lastshare: nowIso(),
+        sh_shareexternally: true
+      })
+      if (!upd.success) throw upd.error ?? new Error('Update failed')
+      await load()
+      flash('ok', `Invite emailed to ${email}`)
+      setEmailDraft('')
+    } catch (e) {
+      flash('err', e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const reset = (r: Room) =>
@@ -210,7 +237,7 @@ function App() {
               <label>Invite family / friend</label>
               <div className="inline">
                 <input value={emailDraft} onChange={(e) => setEmailDraft(e.target.value)} placeholder="name@example.com" />
-                <button disabled={busy} onClick={() => invite(selected)}>Send invite</button>
+                <button disabled={busy} onClick={() => void invite(selected)}>Send invite</button>
               </div>
               <p className="hint">Shared with {selected.sh_sharedwith ?? 0} external participant(s).</p>
             </div>

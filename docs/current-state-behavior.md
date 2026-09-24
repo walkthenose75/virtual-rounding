@@ -42,9 +42,12 @@ from docs only — corrected here after unpacking the actual package).
 | Browse by Location/SubLocation | Grid grouped by `sh_location` → `sh_sublocation` |
 | Set/clear patient name | Update `sh_patientname` (+ derive status) |
 | Join | `window.open(sh_meetinglink)` |
-| Invite family (email + SharedWith+1 + LastShare) | Update `sh_sharedwith += 1`, `sh_lastshare = now` (real email via Office 365 connector — follow‑up) |
-| Reset meeting (Graph new link + clear patient + SharedWith=0 + LastReset) | New placeholder link + clear patient + `sh_sharedwith=0` + `sh_lastreset=now` (real Graph meeting via flow/connector — follow‑up) |
+| Invite family (email + SharedWith+1 + LastShare) | **Real email via Office 365 Outlook `SendEmailV2`** + update `sh_sharedwith += 1`, `sh_lastshare = now` |
+| Reset meeting (Graph new link + clear patient + SharedWith=0 + LastReset) | New placeholder link + clear patient + `sh_sharedwith=0` + `sh_lastreset=now` (real Graph meeting via flow/app-registration — follow‑up) |
 
-**Parity now:** patient identification, join, invite tracking, and reset are all real Dataverse
-writes with visible UI changes. **Follow‑ups for full fidelity:** actual invite email (Office
-365 Outlook connector) and actual Teams meeting creation (Graph via a cloud flow or connector).
+**Parity now:** patient identification, join, **real invite email**, invite tracking, and reset are
+all working (Dataverse writes + a real email with visible UI changes). **Follow‑up for full
+fidelity:** actual Teams meeting creation with a retrievable join URL. The Office 365 Outlook
+connector's generated client does not expose an online-meeting join URL, so this needs either the
+Microsoft Teams connector or the **Graph app-auth pattern the original used** (app registration +
+`POST /communications/onlinemeetings`) hosted in a **cloud flow** (secret stays server-side).

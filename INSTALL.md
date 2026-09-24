@@ -24,15 +24,27 @@ This creates the **Virtual Rounding** solution with the `sh_location`, `sh_sublo
 
 ## 2. Deploy the code app
 
+The app uses the **Office 365 Outlook** connector (for real invite emails), so create that
+connection first, then add it as a data source and push.
+
+1. Create a connection: **make.powerapps.com > your environment > Connections > + New connection
+   > Office 365 Outlook > Create** (interactive sign-in). Copy its connection ID
+   (`pac connection list`).
+2. Deploy:
+
 ```powershell
 cd app
 npm install
 az login --tenant <your-tenant-id>
+pac code add-data-source --apiId shared_office365 --connectionId <your-connection-id> --environment https://<your-org>.crm.dynamics.com/
 npm run build
 pac code push --environment https://<your-org>.crm.dynamics.com/ --solutionName VirtualRounding
 ```
 
 The command prints a **play URL** â€” that's your running app.
+
+> After the first push, confirm the code app is in the **Virtual Rounding** solution
+> (Solutions > Virtual Rounding). If it isn't, add it: **Add existing > App > the code app**.
 
 ## 3. Seed synthetic demo data
 
