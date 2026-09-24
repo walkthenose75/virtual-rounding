@@ -6,7 +6,7 @@ Ready-to-paste values for the Solution Hub "Submit a Solution" form. Review befo
 
 - **Solution Title:** Virtual Rounding
 - **Industry:** Providers
-- **GitHub Repository URL:** https://github.com/walkthenose75/virtual-rounding
+- **GitHub Repository URL:** _<add after the repo is created>_
 - **Live Demo Environment URL:** _optional — leave blank; the deliverable is an installable
   unmanaged solution_
 - **Content Type:** Demo Assets, Architecture Pattern

@@ -1,17 +1,27 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { Sh_roomsService } from './generated/services/Sh_roomsService'
 import type { Sh_rooms, Sh_roomsBase } from './generated/models/Sh_roomsModel'
 
 type Room = Sh_rooms
 
-const STATUS_LABELS: Record<number, string> = { 1: 'Available', 2: 'Occupied', 3: 'Needs Reset' }
+const STATUS = { AVAILABLE: 1, OCCUPIED: 2, NEEDS_RESET: 3 } as const
+const STATUS_LABEL: Record<number, string> = { 1: 'Available', 2: 'Occupied', 3: 'Needs Reset' }
 const STATUS_CLASS: Record<number, string> = { 1: 'available', 2: 'occupied', 3: 'reset' }
+
+function nowIso(): string {
+  return new Date().toISOString()
+}
 
 function App() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [toast, setToast] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+  const [patientDraft, setPatientDraft] = useState('')
+  const [emailDraft, setEmailDraft] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -30,17 +40,77 @@ function App() {
     void load()
   }, [load])
 
+  const flash = (kind: 'ok' | 'err', text: string) => {
+    setToast({ kind, text })
+    window.setTimeout(() => setToast(null), 3500)
+  }
+
+  const selected = useMemo(
+    () => rooms.find((r) => r.sh_roomid === selectedId) ?? null,
+    [rooms, selectedId]
+  )
+
+  const openRoom = (room: Room) => {
+    setSelectedId(room.sh_roomid)
+    setPatientDraft(room.sh_patientname ?? '')
+    setEmailDraft('')
+  }
+  const closeRoom = () => setSelectedId(null)
+
+  // --- actions (Dataverse writes) ---
+  const apply = async (id: string, changes: Partial<Omit<Sh_roomsBase, 'sh_roomid'>>, okMsg: string) => {
+    setBusy(true)
+    try {
+      await Sh_roomsService.update(id, changes)
+      await load()
+      flash('ok', okMsg)
+    } catch (e) {
+      flash('err', e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const savePatient = (r: Room) =>
+    apply(
+      r.sh_roomid,
+      { sh_patientname: patientDraft.trim(), sh_status: patientDraft.trim() ? STATUS.OCCUPIED : STATUS.AVAILABLE },
+      patientDraft.trim() ? `Patient set for ${r.sh_name}` : `Patient cleared for ${r.sh_name}`
+    )
+
   const join = (r: Room) => {
     if (r.sh_meetinglink) window.open(r.sh_meetinglink, '_blank', 'noopener')
+    else flash('err', 'No meeting link on this room yet — reset the room to create one.')
   }
 
-  const setStatus = async (r: Room, status: 1 | 2 | 3) => {
-    const changed: Partial<Omit<Sh_roomsBase, 'sh_roomid'>> = { sh_status: status }
-    if (status === 1) changed.sh_patientname = ''
-    await Sh_roomsService.update(r.sh_roomid, changed)
-    await load()
+  const invite = (r: Room) => {
+    const email = emailDraft.trim()
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      flash('err', 'Enter a valid email address.')
+      return
+    }
+    void apply(
+      r.sh_roomid,
+      { sh_sharedwith: (r.sh_sharedwith ?? 0) + 1, sh_lastshare: nowIso(), sh_shareexternally: true },
+      `Invite sent to ${email} (share count now ${(r.sh_sharedwith ?? 0) + 1})`
+    ).then(() => setEmailDraft(''))
   }
 
+  const reset = (r: Room) =>
+    apply(
+      r.sh_roomid,
+      {
+        sh_meetinglink: `https://teams.microsoft.com/l/meetup-join/reset-${Date.now()}`,
+        sh_patientname: '',
+        sh_sharedwith: 0,
+        sh_shareexternally: false,
+        sh_lastreset: nowIso(),
+        sh_status: STATUS.AVAILABLE
+      },
+      `${r.sh_name} reset — new meeting link, patient cleared, invites revoked`
+    )
+
+  // --- grouping ---
   const locName = (r: Room) => r.sh_locationidname ?? 'Unassigned'
   const subName = (r: Room) => r.sh_sublocationidname ?? '—'
   const locations = [...new Set(rooms.map(locName))].sort()
@@ -50,8 +120,8 @@ function App() {
     rooms.filter((r) => locName(r) === loc && subName(r) === sub)
 
   const total = rooms.length
-  const occupied = rooms.filter((r) => r.sh_status === 2).length
-  const needsReset = rooms.filter((r) => r.sh_status === 3).length
+  const occupied = rooms.filter((r) => r.sh_status === STATUS.OCCUPIED).length
+  const needsReset = rooms.filter((r) => r.sh_status === STATUS.NEEDS_RESET).length
 
   return (
     <div className="app">
@@ -85,28 +155,20 @@ function App() {
                 <h3>{sub}</h3>
                 <div className="grid">
                   {roomsFor(loc, sub).map((r) => {
-                    const status = (r.sh_status ?? 1) as number
+                    const status = (r.sh_status ?? STATUS.AVAILABLE) as number
                     return (
-                      <article key={r.sh_roomid} className={`room ${STATUS_CLASS[status]}`}>
+                      <button key={r.sh_roomid} className={`room ${STATUS_CLASS[status]}`} onClick={() => openRoom(r)}>
                         <div className="room-head">
                           <span className="room-name">{r.sh_name}</span>
-                          <span className={`badge ${STATUS_CLASS[status]}`}>{STATUS_LABELS[status]}</span>
+                          <span className={`badge ${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>
                         </div>
                         <div className="patient">
                           {r.sh_patientname ? r.sh_patientname : <em>Vacant</em>}
                         </div>
-                        <div className="room-actions">
-                          <button className="join" onClick={() => join(r)} disabled={!r.sh_meetinglink}>
-                            Join
-                          </button>
-                          {status === 1 && <button onClick={() => void setStatus(r, 2)}>Occupy</button>}
-                          {status !== 1 && <button onClick={() => void setStatus(r, 1)}>Reset</button>}
-                          {status !== 3 && <button onClick={() => void setStatus(r, 3)}>Flag</button>}
-                        </div>
                         {r.sh_shareexternally && (
                           <div className="shared">Family invited · {r.sh_sharedwith ?? 0}</div>
                         )}
-                      </article>
+                      </button>
                     )
                   })}
                 </div>
@@ -115,6 +177,50 @@ function App() {
           </section>
         ))}
       </main>
+
+      {selected && (
+        <div className="overlay" onClick={closeRoom}>
+          <aside className="panel" onClick={(e) => e.stopPropagation()}>
+            <div className="panel-head">
+              <div>
+                <h2>{selected.sh_name}</h2>
+                <p>{locName(selected)} · {subName(selected)}</p>
+              </div>
+              <button className="close" onClick={closeRoom}>✕</button>
+            </div>
+
+            <span className={`badge ${STATUS_CLASS[(selected.sh_status ?? 1) as number]}`}>
+              {STATUS_LABEL[(selected.sh_status ?? 1) as number]}
+            </span>
+
+            <div className="field">
+              <label>Patient name</label>
+              <div className="inline">
+                <input value={patientDraft} onChange={(e) => setPatientDraft(e.target.value)} placeholder="Enter patient name" />
+                <button className="primary" disabled={busy} onClick={() => void savePatient(selected)}>Save</button>
+              </div>
+            </div>
+
+            <div className="actions">
+              <button className="join" disabled={busy} onClick={() => join(selected)}>Join meeting</button>
+              <button disabled={busy} onClick={() => void reset(selected)}>Reset room</button>
+            </div>
+
+            <div className="field">
+              <label>Invite family / friend</label>
+              <div className="inline">
+                <input value={emailDraft} onChange={(e) => setEmailDraft(e.target.value)} placeholder="name@example.com" />
+                <button disabled={busy} onClick={() => invite(selected)}>Send invite</button>
+              </div>
+              <p className="hint">Shared with {selected.sh_sharedwith ?? 0} external participant(s).</p>
+            </div>
+
+            {busy && <div className="working">Working…</div>}
+          </aside>
+        </div>
+      )}
+
+      {toast && <div className={`toast ${toast.kind}`}>{toast.text}</div>}
     </div>
   )
 }
