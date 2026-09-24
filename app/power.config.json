@@ -1,0 +1,34 @@
+﻿{
+    "version":  "1.0",
+    "appId":  "",
+    "appDisplayName":  "Virtual Rounding",
+    "region":  "prod",
+    "environmentId":  "",
+    "description":  " ",
+    "buildPath":  "./dist",
+    "buildEntryPoint":  "index.html",
+    "localAppUrl":  "http://localhost:3000",
+    "logoPath":  "Default",
+    "connectionReferences":  {
+
+                             },
+    "databaseReferences":  {
+                               "default.cds":  {
+                                                   "dataSources":  {
+                                                                       "rooms":  {
+                                                                                     "entitySetName":  "sh_rooms",
+                                                                                     "logicalName":  "sh_room"
+                                                                                 },
+                                                                       "locations":  {
+                                                                                         "entitySetName":  "sh_locations",
+                                                                                         "logicalName":  "sh_location"
+                                                                                     },
+                                                                       "sublocations":  {
+                                                                                            "entitySetName":  "sh_sublocations",
+                                                                                            "logicalName":  "sh_sublocation"
+                                                                                        }
+                                                                   },
+                                                   "environmentVariableName":  ""
+                                               }
+                           }
+}

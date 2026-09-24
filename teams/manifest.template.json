@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "b6f9c2a1-7d3e-4c58-9a21-2f6e5b8c4d10",
+  "packageName": "com.smartterhealth.virtualrounding",
+  "developer": {
+    "name": "Smartter Health",
+    "websiteUrl": "https://aka.ms/teamsvirtualrounding",
+    "privacyUrl": "https://aka.ms/teamsvirtualrounding",
+    "termsOfUseUrl": "https://aka.ms/teamsvirtualrounding"
+  },
+  "name": {
+    "short": "Virtual Rounding",
+    "full": "Virtual Rounding"
+  },
+  "description": {
+    "short": "Provider console for virtual patient rounding.",
+    "full": "Virtual Rounding lets care providers browse patient rooms by location, see status and current patient, and join the room's Microsoft Teams meeting. Built as a Power Apps code app on Microsoft Dataverse."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F766E",
+  "staticTabs": [
+    {
+      "entityId": "virtualrounding",
+      "name": "Rounding",
+      "contentUrl": "{{APP_PLAY_URL}}",
+      "websiteUrl": "{{APP_PLAY_URL}}",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "permissions": [
+    "identity"
+  ],
+  "validDomains": [
+    "{{APP_DOMAIN}}"
+  ]
+}

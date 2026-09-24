@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="business_unit_sh_location" />
+  <EntityRelationship Name="business_unit_sh_room" />
+  <EntityRelationship Name="business_unit_sh_sublocation" />
+  <EntityRelationship Name="lk_sh_location_createdby" />
+  <EntityRelationship Name="lk_sh_location_modifiedby" />
+  <EntityRelationship Name="lk_sh_room_createdby" />
+  <EntityRelationship Name="lk_sh_room_modifiedby" />
+  <EntityRelationship Name="lk_sh_sublocation_createdby" />
+  <EntityRelationship Name="lk_sh_sublocation_modifiedby" />
+  <EntityRelationship Name="owner_sh_location" />
+  <EntityRelationship Name="owner_sh_room" />
+  <EntityRelationship Name="owner_sh_sublocation" />
+  <EntityRelationship Name="sh_room_location" />
+  <EntityRelationship Name="sh_room_sublocation" />
+  <EntityRelationship Name="sh_sublocation_location" />
+  <EntityRelationship Name="team_sh_location" />
+  <EntityRelationship Name="team_sh_room" />
+  <EntityRelationship Name="team_sh_sublocation" />
+  <EntityRelationship Name="user_sh_location" />
+  <EntityRelationship Name="user_sh_room" />
+  <EntityRelationship Name="user_sh_sublocation" />
+</EntityRelationships>

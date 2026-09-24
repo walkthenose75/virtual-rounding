@@ -1,0 +1,8 @@
+name,location,sublocation,roomUpn,patientName,status,shareExternally,sharedWith,meetingLink
+Room 301,Fabrikam Medical Center,3 West,room301@fabrikam.example,Jordan Rivera,Occupied,Yes,1,https://teams.microsoft.com/l/meetup-join/demo-301
+Room 302,Fabrikam Medical Center,3 West,room302@fabrikam.example,,Available,No,0,https://teams.microsoft.com/l/meetup-join/demo-302
+Room 303,Fabrikam Medical Center,3 West,room303@fabrikam.example,Priya Nair,Occupied,No,0,https://teams.microsoft.com/l/meetup-join/demo-303
+ICU 1,Fabrikam Medical Center,ICU,icu1@fabrikam.example,Marcus Bello,Occupied,Yes,2,https://teams.microsoft.com/l/meetup-join/demo-icu1
+ICU 2,Fabrikam Medical Center,ICU,icu2@fabrikam.example,,Needs Reset,No,0,https://teams.microsoft.com/l/meetup-join/demo-icu2
+Peds 201,Contoso Children's Hospital,Pediatrics 2,peds201@contoso.example,Emma Larsson,Occupied,Yes,3,https://teams.microsoft.com/l/meetup-join/demo-p201
+Peds 202,Contoso Children's Hospital,Pediatrics 2,peds202@contoso.example,,Available,No,0,https://teams.microsoft.com/l/meetup-join/demo-p202
